@@ -1,0 +1,14 @@
+{
+  "name": "drift-game",
+  "version": "1.0.0",
+  "description": "Drift - Meditative Paper Boat Physics Game",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "serve": "python server.py",
+    "test": "python check_syntax.py"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

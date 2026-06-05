@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Drift — A Paper & Ink Meditation</title>
+  <meta name="description" content="A peaceful, indirect-control physics puzzle game. Paint watercolor wind currents onto parchment to guide a paper boat to its sanctuary.">
+  
+  <!-- App Store Fullscreen Meta Configuration -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Drift">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Fonts for Meditative Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..600;1,400..600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Game Canvas Container -->
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Left Side: Level Info HUD -->
+  <div id="level-hud" class="hud-group fade-in">
+    <div id="level-chapter">Chapter 1</div>
+    <h1 id="level-title">Gentle Waters</h1>
+    <p id="level-description">Paint a path of wind with your brush. Guide the boat to the dock.</p>
+  </div>
+
+  <!-- Right Top: Utilities -->
+  <div id="utility-hud" class="hud-group fade-in">
+    <button id="level-select-btn" class="hud-btn text-btn">Chapters</button>
+    <button id="sound-btn" class="hud-btn circle-btn" aria-label="Toggle Sound">
+      <svg id="sound-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    </button>
+    <button id="help-btn" class="hud-btn circle-btn" aria-label="How to Play">?</button>
+  </div>
+
+  <!-- Center Bottom: Primary Controls (Fades out when playing) -->
+  <div id="controls-hud" class="hud-group fade-in">
+    <button id="play-pause-btn" class="hud-btn action-btn">
+      <span id="play-btn-text">Cast Off</span>
+    </button>
+    <button id="clear-btn" class="hud-btn secondary-btn" aria-label="Clear All Wind">
+      <span>Clear Canvas</span>
+    </button>
+    <div id="wind-counter">
+      <span id="wind-count-val">0</span>/<span id="wind-max-val">3</span> ink strokes
+    </div>
+  </div>
+
+  <!-- Floating Active Controls (Only visible when simulation is active) -->
+  <div id="floating-active-hud" class="hud-group hidden">
+    <button id="reset-btn" class="hud-btn action-btn recall-btn">
+      <span>Recall Boat</span>
+    </button>
+  </div>
+
+  <!-- Level Select Modal (overlay) -->
+  <div id="level-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-card">
+      <h2>Select a Chapter</h2>
+      <div id="level-grid" class="level-grid">
+        <!-- Levels will be dynamically inserted here -->
+      </div>
+      <button id="close-level-modal" class="hud-btn secondary-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Game Message / Help Modal -->
+  <div id="help-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-card help-content">
+      <h2>The Way of Drift</h2>
+      <p>Guide the paper boat to the warm dock lantern by painting gentle wind currents.</p>
+      <ul>
+        <li><strong>Paint Wind:</strong> Click and drag on the parchment to paint a watercolor brush stroke of wind. The direction of your drag guides the breeze.</li>
+        <li><strong>Deselect / Erase:</strong> Click a painted stroke to select it, then click its red **x** handle to erase it.</li>
+        <li><strong>Cast Off:</strong> Press **Cast Off** to release the boat. Watch it drift naturally. All menus will fade to let you meditate on its journey.</li>
+        <li><strong>Recall & Tweak:</strong> Click **Recall Boat** at any time to return to the easel and adjust your strokes.</li>
+      </ul>
+      <p class="meditation-tip"><em>Tip: Watch the cherry blossom petals and water ripples. They reveal the hidden flow of wind and water.</em></p>
+      <button id="close-help-modal" class="hud-btn action-btn">Begin Meditation</button>
+    </div>
+  </div>
+
+  <!-- Success/Victory Overlay -->
+  <div id="success-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-card victory-card">
+      <div class="victory-crest">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+      <h2>Sanctuary Reached</h2>
+      
+      <!-- Hand-sketched stars container -->
+      <div id="victory-stars" class="star-rating">
+        <span class="star-outline" data-star="1">★</span>
+        <span class="star-outline" data-star="2">★</span>
+        <span class="star-outline" data-star="3">★</span>
+      </div>
+
+      <p id="success-message">The boat rests peacefully at the dock.</p>
+      <div class="victory-actions">
+        <button id="next-level-btn" class="hud-btn action-btn">Journey Onward</button>
+        <button id="replay-level-btn" class="hud-btn secondary-btn">Replay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sinking / Collision Fail Overlay -->
+  <div id="fail-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-card fail-card">
+      <div class="fail-crest">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h2>Faded in the Stream</h2>
+      <p id="fail-message">The paper boat took on water and sank into the channel.</p>
+      <div class="fail-actions">
+        <button id="fail-retry-btn" class="hud-btn action-btn">Try Again</button>
+        <button id="fail-clear-btn" class="hud-btn secondary-btn">Clear Canvas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Time Title / Intro Overlay -->
+  <div id="intro-overlay" class="modal-overlay">
+    <div class="modal-content glass-card intro-content">
+      <div class="intro-boat-art">
+        <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,10 25,35 50,35" fill="none" stroke="currentColor" stroke-width="1" />
+          <polygon points="50,10 75,35 50,35" fill="none" stroke="currentColor" stroke-width="1" />
+          <polygon points="15,35 85,35 70,50 30,50" fill="none" stroke="currentColor" stroke-width="1.2" />
+          <line x1="50" y1="35" x2="50" y2="50" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </div>
+      <h1 class="intro-title">DRIFT</h1>
+      <p class="intro-subtitle">A Meditative Physics Voyage</p>
+      <p class="intro-desc">Paint watercolor currents of wind to guide an origami boat through rocky channels to its sanctuary dock.</p>
+      <button id="begin-journey-btn" class="hud-btn action-btn">Begin Journey</button>
+    </div>
+  </div>
+
+  <!-- Register PWA Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Drift SW Registered successfully.', reg.scope))
+          .catch((err) => console.warn('Drift SW Registration failed:', err));
+      });
+    }
+  </script>
+
+  <!-- Game Main Script (ES6 Module) -->
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
